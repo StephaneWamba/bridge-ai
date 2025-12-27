@@ -1,0 +1,25 @@
+# Development Dockerfile for hot reload
+FROM node:18-alpine
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json ./
+COPY pnpm-lock.yaml* ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile || pnpm install
+
+# Copy application code (will be mounted as volume in docker-compose)
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Default command (overridden by docker-compose)
+CMD ["pnpm", "dev"]
+

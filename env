@@ -1,0 +1,15 @@
+﻿# HubSpot OAuth Credentials
+HUBSPOT_CLIENT_ID=b64432bd-c65a-4c88-b74d-ecadceed27b3
+HUBSPOT_CLIENT_SECRET=8df68b59-b76d-4294-afbf-51a90d3018b8
+HUBSPOT_REDIRECT_URI=http://localhost:8001/api/v1/integrations/hubspot/callback
+
+# Database
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5434/bridgeai
+LANGRAPH_CHECKPOINT_DB_URL=postgresql+asyncpg://postgres:postgres@localhost:5433/bridgeai_checkpoints
+
+# Security (change these in production)
+SECRET_KEY=change-me-in-production-generate-with-fernet-key
+ENCRYPTION_KEY=change-me-in-production-32-chars-long-key!!
+
+# Debug
+DEBUG=true

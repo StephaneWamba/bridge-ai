@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bridgeai-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bridgeai
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-checkpoints:
+    image: postgres:16-alpine
+    container_name: bridgeai-postgres-checkpoints
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bridgeai_checkpoints
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_checkpoints_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: bridgeai-backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+      - backend_cache:/root/.cache
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/bridgeai
+      - LANGRAPH_CHECKPOINT_DB_URL=postgresql+asyncpg://postgres:postgres@postgres-checkpoints:5432/bridgeai_checkpoints
+      - HUBSPOT_CLIENT_ID=${HUBSPOT_CLIENT_ID}
+      - HUBSPOT_CLIENT_SECRET=${HUBSPOT_CLIENT_SECRET}
+      - HUBSPOT_REDIRECT_URI=${HUBSPOT_REDIRECT_URI:-http://localhost:8001/api/v1/integrations/hubspot/callback}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-checkpoints:
+        condition: service_healthy
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src --reload-include "*.py"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: bridgeai-frontend
+    ports:
+      - "3004:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - NEXT_PUBLIC_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    command: pnpm dev
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  postgres_checkpoints_data:
+  backend_cache:
+
