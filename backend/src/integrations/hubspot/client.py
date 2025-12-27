@@ -13,6 +13,7 @@ from tenacity import (
 
 from src.integrations.base import BaseIntegration
 from src.integrations.hubspot.oauth import HubSpotOAuth
+from src.core.logging import logger
 
 
 class HubSpotRateLimitError(Exception):
@@ -54,6 +55,8 @@ class HubSpotClient(BaseIntegration):
         self._rate_limit_queue: list[datetime] = []
         self._lock = asyncio.Lock()
         self._on_token_refresh = on_token_refresh
+        # Cache for association type IDs (to avoid querying every time)
+        self._association_type_cache: dict[tuple[str, str], int] = {}
 
     async def _wait_for_rate_limit(self) -> None:
         """Wait if rate limit would be exceeded."""
@@ -121,22 +124,38 @@ class HubSpotClient(BaseIntegration):
                 elif e.response.status_code == 401:
                     # Token might be expired, try to refresh
                     if self.refresh_token:
-                        await self.refresh_access_token()
-                        # Retry the request once with new token
-                        headers["Authorization"] = f"Bearer {self.access_token}"
-                        response = await client.request(
-                            method=method,
-                            url=url,
-                            headers=headers,
-                            params=params,
-                            json=json_data,
-                            timeout=30.0,
-                        )
-                        response.raise_for_status()
-                        return response.json()
-                    raise HubSpotAPIError("Unauthorized - token expired")
+                        try:
+                            logger.info(
+                                "HubSpot token expired, attempting refresh...")
+                            await self.refresh_access_token()
+                            # Retry the request once with new token
+                            headers["Authorization"] = f"Bearer {self.access_token}"
+                            response = await client.request(
+                                method=method,
+                                url=url,
+                                headers=headers,
+                                params=params,
+                                json=json_data,
+                                timeout=30.0,
+                            )
+                            response.raise_for_status()
+                            logger.info(
+                                "HubSpot request succeeded after token refresh")
+                            return response.json()
+                        except Exception as refresh_error:
+                            logger.error(
+                                f"HubSpot token refresh failed: {refresh_error}", exc_info=True)
+                            raise HubSpotAPIError(
+                                f"Unauthorized - token expired and refresh failed: {str(refresh_error)}"
+                            ) from refresh_error
+                    raise HubSpotAPIError(
+                        "Unauthorized - token expired and no refresh token available")
                 else:
                     error_detail = e.response.text if e.response else "Unknown error"
+                    # Log the full error for debugging
+                    logger.error(
+                        f"HubSpot API error {e.response.status_code}: {error_detail}"
+                    )
                     raise HubSpotAPIError(
                         f"HubSpot API error: {e.response.status_code} - {error_detail}"
                     )
@@ -226,7 +245,16 @@ class HubSpotClient(BaseIntegration):
     async def update_contact(
         self, contact_id: str, properties: dict[str, Any]
     ) -> dict[str, Any]:
-        """Update a contact."""
+        """Update a contact. Verifies the contact exists before updating."""
+        # Verify contact exists first
+        try:
+            await self.get_contact(contact_id)
+        except Exception as e:
+            logger.warning(
+                f"Contact {contact_id} verification failed: {e}")
+            raise HubSpotAPIError(
+                f"Contact {contact_id} not found or inaccessible: {e}")
+        
         return await self._make_request(
             "PATCH",
             f"/crm/v3/objects/contacts/{contact_id}",
@@ -259,31 +287,72 @@ class HubSpotClient(BaseIntegration):
         self, contact_id: Optional[str] = None, company_id: Optional[str] = None, note: str = ""
     ) -> dict[str, Any]:
         """Create a note associated with a contact or company."""
+        from datetime import datetime
+
+        # HubSpot requires hs_timestamp (Unix timestamp in milliseconds)
+        # Use current timestamp if not provided
+        timestamp_ms = int(datetime.utcnow().timestamp() * 1000)
+
+        # Build the request payload
+        payload = {
+            "properties": {
+                "hs_note_body": note,
+                "hs_timestamp": timestamp_ms,  # Required by HubSpot
+            }
+        }
+
+        # Add associations only if contact_id or company_id is provided
+        # Verify the objects exist before creating associations
         associations = []
         if contact_id:
+            # Verify contact exists first
+            try:
+                await self.get_contact(contact_id)
+            except Exception as e:
+                logger.warning(
+                    f"Contact {contact_id} verification failed: {e}")
+                raise HubSpotAPIError(
+                    f"Contact {contact_id} not found or inaccessible: {e}")
+
+            # Get the correct association type ID from HubSpot API
+            # Note: We're creating a note (from) and associating it with a contact (to)
+            # So we query: notes -> contacts
+            association_type_id = await self.get_association_type_id("notes", "contacts")
             associations.append(
                 {
                     "to": {"id": contact_id},
-                    "types": [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": 214}],
+                    "types": [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": association_type_id}],
                 }
             )
+
         if company_id:
+            # Verify company exists first
+            try:
+                await self.get_company(company_id)
+            except Exception as e:
+                logger.warning(
+                    f"Company {company_id} verification failed: {e}")
+                raise HubSpotAPIError(
+                    f"Company {company_id} not found or inaccessible: {e}")
+
+            # Get the correct association type ID from HubSpot API
+            # Note: We're creating a note (from) and associating it with a company (to)
+            # So we query: notes -> companies
+            association_type_id = await self.get_association_type_id("notes", "companies")
             associations.append(
                 {
                     "to": {"id": company_id},
-                    "types": [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": 279}],
+                    "types": [{"associationCategory": "HUBSPOT_DEFINED", "associationTypeId": association_type_id}],
                 }
             )
+
+        if associations:
+            payload["associations"] = associations
 
         return await self._make_request(
             "POST",
             "/crm/v3/objects/notes",
-            json_data={
-                "properties": {
-                    "hs_note_body": note,
-                },
-                "associations": associations,
-            },
+            json_data=payload,
         )
 
     async def refresh_access_token(self) -> dict[str, Any]:
@@ -310,6 +379,90 @@ class HubSpotClient(BaseIntegration):
             "refresh_token": self.refresh_token,
             "expires_at": token.get("expires_at"),
         }
+
+    async def get_association_type_id(
+        self, from_object_type: str, to_object_type: str
+    ) -> int:
+        """Get the association type ID for a specific object relationship.
+        
+        Queries HubSpot API to get the correct association type ID for the account.
+        This is the safe way that works for all HubSpot accounts.
+        
+        Args:
+            from_object_type: Source object type (e.g., "contacts", "companies", "notes")
+            to_object_type: Target object type (e.g., "contacts", "companies", "notes")
+            
+        Returns:
+            The association type ID for this relationship
+            
+        Raises:
+            HubSpotAPIError: If the association type cannot be found
+        """
+        # Check cache first
+        cache_key = (from_object_type, to_object_type)
+        if cache_key in self._association_type_cache:
+            return self._association_type_cache[cache_key]
+        
+        # Try the forward direction first (from -> to)
+        endpoint = f"/crm/v4/associations/{from_object_type}/{to_object_type}/labels"
+        try:
+            response = await self._make_request("GET", endpoint)
+            results = response.get("results", [])
+            
+            if results:
+                # Get the first result (usually there's only one)
+                association_type_id = results[0].get("typeId") or results[0].get("id")
+                
+                if association_type_id:
+                    # Cache the result
+                    self._association_type_cache[cache_key] = association_type_id
+                    
+                    logger.info(
+                        f"Found association type ID {association_type_id} for {from_object_type} -> {to_object_type}"
+                    )
+                    
+                    return association_type_id
+        except Exception as e:
+            logger.debug(
+                f"Forward direction failed for {from_object_type} -> {to_object_type}, trying reverse: {e}"
+            )
+        
+        # Try reverse direction if forward fails (associations might be bidirectional)
+        reverse_endpoint = f"/crm/v4/associations/{to_object_type}/{from_object_type}/labels"
+        try:
+            response = await self._make_request("GET", reverse_endpoint)
+            results = response.get("results", [])
+            
+            if not results:
+                raise HubSpotAPIError(
+                    f"No association type found for {from_object_type} -> {to_object_type} (tried both directions)"
+                )
+            
+            # Get the first result
+            association_type_id = results[0].get("typeId") or results[0].get("id")
+            
+            if not association_type_id:
+                raise HubSpotAPIError(
+                    f"Invalid association type response for {from_object_type} -> {to_object_type}"
+                )
+            
+            # Cache the result (for both directions since they're the same)
+            self._association_type_cache[cache_key] = association_type_id
+            self._association_type_cache[(to_object_type, from_object_type)] = association_type_id
+            
+            logger.info(
+                f"Found association type ID {association_type_id} for {from_object_type} -> {to_object_type} (via reverse lookup)"
+            )
+            
+            return association_type_id
+        except Exception as e:
+            logger.error(
+                f"Error getting association type ID for {from_object_type} -> {to_object_type}: {e}",
+                exc_info=True,
+            )
+            raise HubSpotAPIError(
+                f"Failed to get association type ID: {e}"
+            ) from e
 
     async def test_connection(self) -> bool:
         """Test if the integration is working."""

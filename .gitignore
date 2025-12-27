@@ -32,6 +32,9 @@ node_modules/
 out/
 build/
 dist/
+.pnpm-store/
+pnpm-lock.yaml
+*.tsbuildinfo
 
 # Environment variables
 .env

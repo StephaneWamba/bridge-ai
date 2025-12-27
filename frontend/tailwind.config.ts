@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -50,6 +53,19 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        // Indigo theme colors (primary brand)
+        indigo: {
+          50: "#EEF2FF",
+          100: "#E0E7FF",
+          200: "#C7D2FE",
+          300: "#A5B4FC",
+          400: "#818CF8",
+          500: "#6366F1", // PRIMARY
+          600: "#4F46E5",
+          700: "#4338CA",
+          800: "#3730A3",
+          900: "#312E81",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -58,13 +74,23 @@ const config: Config = {
       },
       animation: {
         "shimmer": "shimmer 2s linear infinite",
+        "shimmer-text": "shimmer-text 2s linear infinite",
         "fade-in": "fadeIn 0.5s ease-in",
         "slide-up": "slideUp 0.3s ease-out",
+        "pulse-dot": "pulse-dot 1.4s ease-in-out infinite",
       },
       keyframes: {
         shimmer: {
           "0%": { backgroundPosition: "-1000px 0" },
           "100%": { backgroundPosition: "1000px 0" },
+        },
+        "shimmer-text": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "pulse-dot": {
+          "0%, 60%, 100%": { opacity: "0.3" },
+          "30%": { opacity: "1" },
         },
         fadeIn: {
           "0%": { opacity: "0" },

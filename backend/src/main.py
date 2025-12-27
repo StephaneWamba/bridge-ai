@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import settings
 from src.core.logging import logger
-from src.api.routes import health, integrations
+from src.api.routes import health, integrations, agent
 
 app = FastAPI(
     title="BridgeAI API",
@@ -27,6 +27,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(integrations.router)
+app.include_router(agent.router)
 
 
 @app.on_event("startup")

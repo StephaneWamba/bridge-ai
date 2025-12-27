@@ -1,1 +1,1 @@
-"""Agent orchestration and tool execution."""
+"""Agent module for LangGraph orchestration."""

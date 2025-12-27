@@ -59,7 +59,7 @@ class HubSpotOAuth:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self.token_url,
-                data=data, 
+                data=data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
             response.raise_for_status()
@@ -79,6 +79,7 @@ class HubSpotOAuth:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self.token_url,
+                data=data,  # Fixed: was missing the data parameter!
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
             )
             response.raise_for_status()

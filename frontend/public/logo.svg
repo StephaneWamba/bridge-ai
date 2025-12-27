@@ -1,0 +1,21 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bridge structure -->
+  <path d="M20 80 L40 60 L60 80 L80 60 L100 80" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Support pillars -->
+  <line x1="20" y1="80" x2="20" y2="100" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="60" y1="80" x2="60" y2="100" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <line x1="100" y1="80" x2="100" y2="100" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- AI sparkle/connection nodes -->
+  <circle cx="40" cy="60" r="4" fill="currentColor"/>
+  <circle cx="80" cy="60" r="4" fill="currentColor"/>
+  
+  <!-- Central AI node (larger) -->
+  <circle cx="60" cy="80" r="6" fill="currentColor"/>
+  
+  <!-- Connection lines (data flow) -->
+  <path d="M40 60 L50 70 L60 80" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+  <path d="M80 60 L70 70 L60 80" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/>
+</svg>
+
