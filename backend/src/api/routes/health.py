@@ -16,3 +16,6 @@ async def readiness_check():
     """Readiness check endpoint."""
     return {"status": "ready", "service": "BridgeAI API"}
 
+
+
+

@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageSquare, BarChart3, Link2, Settings, Sparkles } from "lucide-react";
+import { MessageSquare, BarChart3, Link2, Settings, Sparkles, Home } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const navigation = [
+  {
+    name: "Home",
+    href: "/",
+    icon: Home,
+  },
   {
     name: "Chat",
     href: "/chat",

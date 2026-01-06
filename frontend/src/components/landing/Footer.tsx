@@ -7,7 +7,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#0A0A0A] border-t border-gray-800/50">
+    <footer className="bg-white dark:bg-[#0A0A0A] border-t border-gray-200 dark:border-gray-800/50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
@@ -21,19 +21,19 @@ export function Footer() {
                 className="dark:invert"
               />
             </Link>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400 transition-colors">
               AI-powered business automation
             </p>
           </div>
 
           {/* Product */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Product</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 transition-colors">Product</h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="#features"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Features
                 </Link>
@@ -41,7 +41,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/integrations"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Integrations
                 </Link>
@@ -49,7 +49,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/chat"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Chat
                 </Link>
@@ -59,12 +59,12 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Resources</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 transition-colors">Resources</h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="#"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Documentation
                 </a>
@@ -72,7 +72,7 @@ export function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   API Reference
                 </a>
@@ -80,7 +80,7 @@ export function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Support
                 </a>
@@ -90,12 +90,12 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">Company</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 transition-colors">Company</h3>
             <ul className="space-y-2">
               <li>
                 <a
                   href="#"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   About
                 </a>
@@ -103,7 +103,7 @@ export function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Blog
                 </a>
@@ -111,7 +111,7 @@ export function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Contact
                 </a>
@@ -121,8 +121,8 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-gray-800/50">
-          <p className="text-sm text-gray-400 text-center">
+        <div className="pt-8 border-t border-gray-200 dark:border-gray-800/50 transition-colors">
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center transition-colors">
             © {currentYear} BridgeAI. All rights reserved.
           </p>
         </div>

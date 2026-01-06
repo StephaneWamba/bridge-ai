@@ -36,3 +36,6 @@ def decrypt_token(encrypted_token: str) -> str:
     decoded = base64.urlsafe_b64decode(encrypted_token.encode())
     decrypted = f.decrypt(decoded)
     return decrypted.decode()
+
+
+

@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "change-me-in-production"
     ENCRYPTION_KEY: str = "change-me-in-production-32-chars!!"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # OpenAI
     OPENAI_API_KEY: str = ""

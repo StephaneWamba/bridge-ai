@@ -246,3 +246,6 @@ class DiscordClient(BaseIntegration):
             List of channel objects with id, name, type, etc.
         """
         return await self._make_request("GET", f"/guilds/{guild_id}/channels")
+
+
+

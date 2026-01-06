@@ -7,7 +7,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from src.api.dependencies import get_database_session
+from src.api.dependencies import get_database_session, get_current_user
+from src.models.user import User
 from src.agent.orchestrator import AgentOrchestrator
 from src.services.conversation_service import ConversationService
 from src.core.logging import logger
@@ -43,10 +44,10 @@ class ChatResponse(BaseModel):
 async def chat_stream(
     request: ChatRequest,
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Process a chat message and stream real-time updates via Server-Sent Events."""
-    # For now, use default user (single-user system)
-    user_id = "00000000-0000-0000-0000-000000000000"
+    user_id = str(current_user.id)
 
     async def event_generator():
         try:
@@ -82,10 +83,10 @@ async def chat_stream(
 async def chat(
     request: ChatRequest,
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Process a chat message and return agent response."""
-    # For now, use default user (single-user system)
-    user_id = "00000000-0000-0000-0000-000000000000"
+    user_id = str(current_user.id)
 
     try:
         orchestrator = await get_orchestrator()
@@ -107,10 +108,10 @@ async def chat(
 async def list_conversations(
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """List recent conversations for the current user."""
-    # For now, use default user (single-user system)
-    user_id = "00000000-0000-0000-0000-000000000000"
+    user_id = str(current_user.id)
 
     try:
         conversations = await ConversationService.list_conversations(
@@ -198,10 +199,10 @@ async def list_conversations(
 async def get_conversation_messages(
     session_id: str,
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Get messages for a specific conversation by session_id."""
-    # For now, use default user (single-user system)
-    user_id = "00000000-0000-0000-0000-000000000000"
+    user_id = str(current_user.id)
 
     try:
         conversation = await ConversationService.get_conversation(

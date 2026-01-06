@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.dependencies import get_database_session
+from src.api.dependencies import get_database_session, get_current_user
+from src.models.user import User
 from src.integrations.hubspot.oauth import HubSpotOAuth
 from src.integrations.gmail.oauth import GoogleOAuth
 from src.services.integration_service import IntegrationService
@@ -20,11 +21,10 @@ router = APIRouter(prefix="/api/v1/integrations", tags=["integrations"])
 @router.get("/hubspot/authorize")
 async def hubspot_authorize(
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Initiate HubSpot OAuth flow."""
-    # For now, we'll use a default user_id (single-user system)
-    # In production, this would come from authentication
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
+    user_id = str(current_user.id)
 
     oauth = HubSpotOAuth()
     state = secrets.token_urlsafe(32)
@@ -49,9 +49,6 @@ async def hubspot_callback(
     db: AsyncSession = Depends(get_database_session),
 ):
     """Handle HubSpot OAuth callback."""
-    # For now, we'll use a default user_id (single-user system)
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
-
     # Verify OAuth state for CSRF protection
     if not state:
         logger.warning("HubSpot OAuth callback missing state parameter")
@@ -62,6 +59,18 @@ async def hubspot_callback(
             url=f"{frontend_url}/integrations?error=Missing state parameter"
         )
 
+    # Get user_id from OAuth state
+    oauth_state = await OAuthStateService.get_state(db=db, state=state, provider="hubspot")
+    if not oauth_state:
+        frontend_url = "http://localhost:3004"
+        if settings.CORS_ORIGINS and settings.CORS_ORIGINS != ["*"]:
+            frontend_url = settings.CORS_ORIGINS[0]
+        return RedirectResponse(
+            url=f"{frontend_url}/integrations?error=Invalid or expired state parameter"
+        )
+    
+    user_id = str(oauth_state.user_id)
+    
     is_valid = await OAuthStateService.verify_and_delete_state(
         db=db,
         state=state,
@@ -120,9 +129,10 @@ async def hubspot_callback(
 @router.get("/hubspot/status")
 async def hubspot_status(
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Get HubSpot integration status."""
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
+    user_id = str(current_user.id)
 
     integration = await IntegrationService.get_integration(db, user_id, "hubspot")
 
@@ -146,9 +156,10 @@ async def hubspot_status(
 @router.post("/hubspot/disconnect")
 async def hubspot_disconnect(
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Disconnect HubSpot integration."""
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
+    user_id = str(current_user.id)
 
     try:
         deleted = await IntegrationService.delete_integration(db, user_id, "hubspot")
@@ -169,9 +180,10 @@ async def hubspot_disconnect(
 @router.get("/google/authorize")
 async def google_authorize(
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Initiate Google OAuth flow (Gmail + Calendar)."""
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
+    user_id = str(current_user.id)
 
     oauth = GoogleOAuth()
     state = secrets.token_urlsafe(32)
@@ -196,8 +208,6 @@ async def google_callback(
     db: AsyncSession = Depends(get_database_session),
 ):
     """Handle Google OAuth callback (Gmail + Calendar)."""
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
-
     # Verify OAuth state for CSRF protection
     if not state:
         logger.warning("Google OAuth callback missing state parameter")
@@ -208,6 +218,18 @@ async def google_callback(
             url=f"{frontend_url}/integrations?error=Missing state parameter"
         )
 
+    # Get user_id from OAuth state
+    oauth_state = await OAuthStateService.get_state(db=db, state=state, provider="google")
+    if not oauth_state:
+        frontend_url = "http://localhost:3004"
+        if settings.CORS_ORIGINS and settings.CORS_ORIGINS != ["*"]:
+            frontend_url = settings.CORS_ORIGINS[0]
+        return RedirectResponse(
+            url=f"{frontend_url}/integrations?error=Invalid or expired state parameter"
+        )
+    
+    user_id = str(oauth_state.user_id)
+    
     is_valid = await OAuthStateService.verify_and_delete_state(
         db=db,
         state=state,
@@ -282,9 +304,10 @@ async def google_callback(
 @router.get("/google/status")
 async def google_status(
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Get Google integration status (Gmail + Calendar)."""
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
+    user_id = str(current_user.id)
 
     gmail_integration = await IntegrationService.get_integration(db, user_id, "gmail")
     calendar_integration = await IntegrationService.get_integration(db, user_id, "calendar")
@@ -304,9 +327,10 @@ async def google_status(
 @router.post("/google/disconnect")
 async def google_disconnect(
     db: AsyncSession = Depends(get_database_session),
+    current_user: User = Depends(get_current_user),
 ):
     """Disconnect Google integration (Gmail + Calendar + Drive)."""
-    user_id = "00000000-0000-0000-0000-000000000000"  # Default user
+    user_id = str(current_user.id)
 
     try:
         # Delete both Gmail and Calendar integrations (they share tokens)

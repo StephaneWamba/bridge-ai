@@ -62,3 +62,6 @@ def cache_key(prefix: str, *args: Any) -> str:
     key_str = f"{prefix}:{':'.join(str(arg) for arg in args)}"
     return hashlib.md5(key_str.encode()).hexdigest()
 
+
+
+

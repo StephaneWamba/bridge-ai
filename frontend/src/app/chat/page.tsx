@@ -98,11 +98,19 @@ export default function ChatPage() {
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+      
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`${API_URL}/api/v1/agent/chat/stream`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           message: textToSend,
           session_id: sessionId,

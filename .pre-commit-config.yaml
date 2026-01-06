@@ -23,3 +23,6 @@ repos:
         files: \.(ts|tsx|js|jsx|json|md|css)$
         exclude: ^(node_modules|\.next|dist|build)/
 
+
+
+

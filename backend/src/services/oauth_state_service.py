@@ -35,20 +35,28 @@ class OAuthStateService:
         return oauth_state
 
     @staticmethod
-    async def verify_and_delete_state(
+    async def get_state(
         db: AsyncSession,
         state: str,
         provider: str,
-    ) -> bool:
-        """Verify OAuth state and delete it if valid."""
+    ) -> Optional[OAuthState]:
+        """Get OAuth state without deleting it."""
         stmt = select(OAuthState).where(
             OAuthState.state == state,
             OAuthState.provider == provider,
             OAuthState.expires_at > datetime.utcnow(),
         )
         result = await db.execute(stmt)
-        oauth_state = result.scalar_one_or_none()
+        return result.scalar_one_or_none()
 
+    @staticmethod
+    async def verify_and_delete_state(
+        db: AsyncSession,
+        state: str,
+        provider: str,
+    ) -> bool:
+        """Verify OAuth state and delete it if valid."""
+        oauth_state = await OAuthStateService.get_state(db, state, provider)
         if not oauth_state:
             return False
 

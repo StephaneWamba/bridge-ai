@@ -22,3 +22,6 @@ class BaseIntegration(ABC):
     async def test_connection(self) -> bool:
         """Test if the integration is working."""
         pass
+
+
+

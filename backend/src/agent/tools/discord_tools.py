@@ -192,3 +192,6 @@ async def get_discord_tools(db, user_id: str) -> list[BaseTool]:
         ListDiscordChannelsTool(client),
     ]
 
+
+
+
