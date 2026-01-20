@@ -35,6 +35,7 @@ export function ChatLayout({
   showSidebar = true,
 }: ChatLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950">
@@ -55,7 +56,11 @@ export function ChatLayout({
         {showSidebar && (
           <>
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex lg:w-[280px] lg:flex-col lg:border-r lg:border-gray-200 lg:dark:border-gray-700">
+            <aside className={cn(
+              "hidden lg:flex lg:flex-col lg:border-r lg:border-gray-200 lg:dark:border-gray-700",
+              "transition-all duration-300 ease-in-out",
+              sidebarCollapsed ? "lg:w-[60px]" : "lg:w-[280px]"
+            )}>
               <Sidebar
                 sessions={sessions}
                 activeSessionId={sessionId || undefined}
@@ -67,6 +72,8 @@ export function ChatLayout({
                   onNewSession?.();
                   setSidebarOpen(false); // Close on mobile after new session
                 }}
+                collapsed={sidebarCollapsed}
+                onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
               />
             </aside>
 

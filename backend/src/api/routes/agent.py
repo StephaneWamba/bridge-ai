@@ -135,22 +135,30 @@ async def list_conversations(
                     if not isinstance(msg, dict):
                         continue
                     msg_type = msg.get("type", "").lower()
+                    # Check for HumanMessage (from LangChain) or "human" role
                     if msg_type not in ["humanmessage", "human"]:
                         continue
 
                     content = msg.get("content", "")
-                    if not content or not isinstance(content, str):
+                    # Handle None or empty content
+                    if not content:
                         continue
-
+                    
+                    # Convert to string if not already
+                    if not isinstance(content, str):
+                        content = str(content)
+                    
                     clean_content = content.strip()
-                    # Skip raw JSON/dict strings or empty content
+                    # Skip empty content or raw JSON/dict strings
                     if (len(clean_content) == 0 or
                             clean_content.startswith(("{", "'", '"'))):
                         continue
 
-                    # Use first 60 chars for more informative title
-                    title = clean_content[:60] + \
-                        "..." if len(clean_content) > 60 else clean_content
+                    # Use first 20 chars for title (as requested)
+                    if len(clean_content) > 20:
+                        title = clean_content[:20] + "..."
+                    else:
+                        title = clean_content
                     break
 
                 # Get last non-empty message content for preview (optimized: reverse iteration)

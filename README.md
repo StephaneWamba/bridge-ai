@@ -2,6 +2,16 @@
 
 **AI Integration Copilot** - Production-ready AI assistant that integrates with business tools (CRM, email, calendar, team chat) to automate sales and operations workflows.
 
+## Screenshots
+
+<div align="center">
+  <img src="frontend/public/chat.png" alt="BridgeAI Chat Interface" width="800"/>
+  <p><em>Chat Interface - Natural language interaction with AI agent</em></p>
+  
+  <img src="frontend/public/integrations.png" alt="BridgeAI Integrations" width="800"/>
+  <p><em>Integrations Page - Connect HubSpot, Gmail, Calendar, and more</em></p>
+</div>
+
 ## Problem & Solution
 
 ### Problem
