@@ -55,13 +55,15 @@ export function HeroSection() {
                   transformStyle: "preserve-3d",
                 }}
               >
-                {/* Placeholder for screenshot - will be replaced with actual image */}
-                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center transition-colors">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <p className="text-lg font-medium mb-2">Screenshot Placeholder</p>
-                    <p className="text-sm">Chat interface screenshot will go here</p>
-                  </div>
-                </div>
+                {/* Chat Interface Screenshot */}
+                <Image
+                  src="/chat.png"
+                  alt="BridgeAI Chat Interface"
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto object-contain"
+                  priority
+                />
               </div>
             </div>
           </div>
